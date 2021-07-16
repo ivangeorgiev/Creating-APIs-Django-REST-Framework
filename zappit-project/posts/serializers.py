@@ -4,6 +4,8 @@ from .models import (
 )
 
 class PostSerializer(serializers.ModelSerializer):
+  poster = serializers.ReadOnlyField(source='poster.username')
+  poster_id = serializers.ReadOnlyField(source='poster.id')
   class Meta:
     model = Post
-    fields = ('post_id', 'title', 'url', 'poster', 'created_at')
+    fields = ('post_id', 'title', 'url', 'poster', 'poster_id', 'created_at')

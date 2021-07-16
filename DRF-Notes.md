@@ -159,6 +159,65 @@ Open admin: http://localhost:8000/admin/
 
 Add posts from admin interface.
 
+### 5. Creating Posts via the API
+
+Change the PostList view to ListCreateAPIView:
+
+```python
+class PostList(generics.ListCreateAPIView):
+  queryset = Post.objects.all()
+  serializer_class = PostSerializer
+```
+
+Now you can post to the same url to create posts.
+
+Tyr it. See https://www.restapitutorial.com/httpstatuscodes.html for HTTP status codes.
+
+Make poster read only field - modify `posts/serializers.py`:
+
+```python
+from rest_framework import serializers
+from .models import (
+  Post,
+)
+
+class PostSerializer(serializers.ModelSerializer):
+  poster = serializers.ReadOnlyField(source='poster.username')
+  poster_id = serializers.ReadOnlyField(source='poster.id')
+  class Meta:
+    model = Post
+    fields = ('post_id', 'title', 'url', 'poster', 'poster_id', 'created_at')
+```
+
+also add a method to the `PostList` view:
+
+```python
+  def perform_create(self, serializer):
+    serializer.save(poster=self.request.user)
+```
+
+
+
+Adjust authorization - modify `posts/views.py`:
+
+```python
+from django.shortcuts import render
+from rest_framework import generics, permissions
+from .models import Post
+from .serializers import PostSerializer
+
+class PostList(generics.ListCreateAPIView):
+  queryset = Post.objects.all()
+  serializer_class = PostSerializer
+  permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+  def perform_create(self, serializer):
+    serializer.save(poster=self.request.user)
+
+```
+
+
+
 
 
 ## Swagger Interface
