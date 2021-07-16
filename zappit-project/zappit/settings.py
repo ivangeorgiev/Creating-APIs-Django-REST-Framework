@@ -27,6 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+API_TITLE = 'Zappit API'
 
 # Application definition
 
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
 
     # our apps
     'posts',
+    'api_docs',
 
     # 3rd party
     'rest_framework',

@@ -8,7 +8,7 @@ People can upvote links.
 
 We call it zappit
 
-### Zappit Models
+### 1. Zappit Models
 
 ```bash
 $ py -3.9 -m venv .venv39
@@ -66,7 +66,7 @@ Migrate
 
 
 
-### Django REST Framework (DRF)
+### 2. Django REST Framework (DRF)
 
 https://www.django-rest-framework.org/
 
@@ -78,7 +78,7 @@ $ pip install djangorestframework
 
 
 
-### Serializers
+### 3. Serializers
 
 Create `posts/serializer.py`:
 
@@ -137,6 +137,116 @@ urlpatterns = [
 ```
 
 
+
+Explore http://localhost:8000/api/posts/
+
+### 4. Adding Posts to the Database
+
+Make sure models are registered in `posts/admin.py`:
+
+```python
+from django.contrib import admin
+from .models import (
+  Post,
+  Vote,
+)
+
+admin.site.register(Post)
+admin.site.register(Vote)
+```
+
+Open admin: http://localhost:8000/admin/
+
+Add posts from admin interface.
+
+
+
+## Swagger Interface
+
+See https://igeorgiev.eu/python/misc/python-django-rest-framework-opeanapi-swagger-documentation/
+
+``` bash
+$ python manage.py startapp api_docs
+$ pip install pyyaml uritemplate
+```
+
+Add setting to project's `settings.py`:
+
+```python
+API_TITLE = 'Zappit API'
+```
+
+Create `api_docs/urls.py`:
+
+```python
+from django.urls import path
+from django.views.generic import TemplateView
+from rest_framework.schemas import get_schema_view
+from rest_framework import renderers
+from django.conf import settings
+
+urlpatterns = [
+    path('', TemplateView.as_view(
+        template_name='swagger-ui.html',
+        extra_context={'schema_url':'openapi-schema-yaml'}
+    ), name='swagger-ui'),
+    path('openapi.yaml', get_schema_view(
+            title=settings.API_TITLE,
+            renderer_classes=[renderers.OpenAPIRenderer]
+        ), name='openapi-schema-yaml'),
+    path('openapi.json', get_schema_view(
+            title=settings.API_TITLE,
+            renderer_classes = [renderers.JSONOpenAPIRenderer],
+        ), name='openapi-schema-json'),
+]
+```
+
+create `api_docs/templates/swagger-ui.html`:
+
+```django
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Swagger</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="//unpkg.com/swagger-ui-dist@3/swagger-ui.css" />
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="//unpkg.com/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+    <script>
+    const ui = SwaggerUIBundle({
+        url: "{% url schema_url %}",
+        dom_id: '#swagger-ui',
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+        layout: "BaseLayout",
+        requestInterceptor: (request) => {
+          request.headers['X-CSRFToken'] = "{{ csrf_token }}"
+          return request;
+        }
+      })
+    </script>
+  </body>
+</html>
+```
+
+Register `api_docs` app in `INSTALLED_APPS` in `settings.py`
+
+Add `api_docs` urls to project urls:
+
+```python
+from django.urls import path, include
+
+urlpatterns = [
+    # ...
+    path('', include('api_docs.urls')),
+    # ...
+]
+```
 
 
 
