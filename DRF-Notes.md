@@ -319,6 +319,42 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 
+### 9. Delete Posts
+
+Create a new view based on [RetrieveUpdateDestroyAPIView](https://www.django-rest-framework.org/api-guide/generic-views/#retrieveupdatedestroyapiview):
+
+```python
+class PostRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
+  queryset = Post.objects.all()
+  serializer_class = PostSerializer
+  permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+  def perform_create(self, serializer):
+    serializer.save(poster=self.request.user)
+
+  def delete(self, request, *args, **kwargs):
+    post = Post.objects.filter(post_id=kwargs['pk'], poster=self.request.user)
+    if post.exists():
+      return self.destroy(request, *args, **kwargs)
+    else:
+      raise ValidationError('Post doesn\'t exist or you are not the right person to delete.')
+
+```
+
+
+
+Register a urls. Take a note that `pk` is expected as parameter by the generic view:
+
+```pytho
+path('posts/<int:pk>/', views.PostRetrieveUpdateDestroy.as_view(), name='posts-update'),
+```
+
+
+
+
+
+
+
 ## Swagger Interface
 
 See https://igeorgiev.eu/python/misc/python-django-rest-framework-opeanapi-swagger-documentation/
