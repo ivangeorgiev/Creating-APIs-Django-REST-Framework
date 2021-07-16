@@ -280,6 +280,45 @@ path('auth/', include('rest_framework.urls'), name='auth'),
 
 
 
+### 8. Delete Votes
+
+Modify the PostVoteCreate view adding a DestroyModelMixin and add a *delete* method
+
+```python
+from rest_framework import generics, permissions, mixins, status
+from rest_framework.response import Response
+
+class PostVoteCreate(generics.CreateAPIView, mixins.DestroyModelMixin):
+    # ...
+    
+  def delete(self, request, *args, **kwargs):
+    if not self.get_queryset().exists():
+      raise ValidationError('You haven\'t voted for this post.')
+    self.get_queryset().delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+```
+
+We want our posts to show also the number of votes:
+
+Modify the PostSerializer - add num_votes field and get_num_votes method (name is significant - should match the field name):
+
+```python
+class PostSerializer(serializers.ModelSerializer):
+  poster = serializers.ReadOnlyField(source='poster.username')
+  poster_id = serializers.ReadOnlyField(source='poster.id')
+  num_votes = serializers.SerializerMethodField()
+
+  class Meta:
+    model = Post
+    fields = ('post_id', 'title', 'url', 'poster', 'poster_id', 'created_at', 'num_votes')
+
+  def get_num_votes(self, post):
+    return post.votes.all().count()
+    return Vote.objects.filter(post=post).count()
+```
+
+
+
 ## Swagger Interface
 
 See https://igeorgiev.eu/python/misc/python-django-rest-framework-opeanapi-swagger-documentation/
