@@ -266,6 +266,18 @@ explore: http://localhost:8000/api/posts/1/vote/ or http://localhost:8000/api/
 
 ### 7. API Auth
 
+From Django admin create a user ivan/dcba1234
+
+Add a url to the project's urls:
+
+```python
+from django.urls import path, include
+
+#...
+path('auth/', include('rest_framework.urls'), name='auth'),
+#...
+```
+
 
 
 ## Swagger Interface
