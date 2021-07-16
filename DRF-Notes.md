@@ -218,6 +218,54 @@ class PostList(generics.ListCreateAPIView):
 
 
 
+### 6. Upvoting Posts
+
+Create a VoteSerializer class:
+
+```python
+class VoteSerializer(serializers.ModelSerializer):
+  # voter = serializers.ReadOnlyField(source='voter.username')
+  # voter_id = serializers.ReadOnlyField(source='voter.id')
+  class Meta:
+    model = Vote
+    fields = ('post_id', )
+```
+
+Create a PostVoteCreate view:
+
+```python
+from rest_framework.exceptions import ValidationError
+from .models import Post, Vote
+from .serializers import PostSerializer, VoteSerializer
+
+class PostVoteCreate(generics.CreateAPIView):
+  serializer_class = VoteSerializer
+  permission_classes = [permissions.IsAuthenticated]
+  
+  def get_queryset(self):
+    user = self.request.user
+    post = Post.objects.get(post_id=self.kwargs['post_id'])
+    return Vote.objects.filter(voter=user, post=post)
+
+  def perform_create(self, serializer):
+    if self.get_queryset().exists():
+      raise ValidationError('You have already voted for this post.')
+    post = Post.objects.get(post_id=self.kwargs['post_id'])
+    serializer.save(voter=self.request.user, post=post)
+```
+
+Add the url to urlpatterns:
+
+```python
+path('posts/<int:post_id>/vote/', views.PostVoteCreate.as_view(), name='posts-data')
+```
+
+explore: http://localhost:8000/api/posts/1/vote/ or http://localhost:8000/api/
+
+
+
+### 7. API Auth
+
 
 
 ## Swagger Interface
