@@ -80,6 +80,62 @@ $ pip install djangorestframework
 
 ### Serializers
 
+Create `posts/serializer.py`:
+
+```python
+from rest_framework import serializers
+from .models import (
+  Post,
+)
+
+class PostSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Post
+    fields = ('post_id', 'title', 'url', 'poster', 'created_at')
+```
+
+
+
+Create a view:
+
+```python
+from django.shortcuts import render
+from rest_framework import generics
+from .models import Post
+from .serializers import PostSerializer
+
+class PostList(generics.ListAPIView):
+  queryset = Post.objects.all()
+  serializer_class = PostSerializer
+```
+
+Create `posts/urls.py`
+
+```python
+from django.urls import path
+from . import views
+
+app_name = 'posts'
+
+urlpatterns = [
+  path('posts/', views.PostList.as_view(), name='posts-data'),
+]
+```
+
+
+
+Register posts urls into project's urls:
+
+```python
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('api/', include('posts.urls', namespace='posts')),
+]
+```
+
 
 
 
